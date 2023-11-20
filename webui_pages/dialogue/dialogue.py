@@ -154,9 +154,9 @@ def dialogue_page(api: ApiRequest):
                 if error_msg := check_error_msg(d): # check whether error occured
                     st.error(error_msg)
                 text += d["answer"]
-                chat_box.update_msg(text, 0)
-                chat_box.update_msg("\n\n".join(d["docs"]), 1, streaming=False)
-            chat_box.update_msg(text, 0, streaming=False)
+                chat_box.update_msg(text)
+                chat_box.update_msg("\n\n".join(d["docs"]), streaming=False)
+            chat_box.update_msg(text, streaming=False)
         elif dialogue_mode == "搜索引擎问答":
             chat_box.ai_say([
                 f"正在执行 `{search_engine}` 搜索...",
@@ -168,9 +168,9 @@ def dialogue_page(api: ApiRequest):
                     st.error(error_msg)
                 else:
                     text += d["answer"]
-                    chat_box.update_msg(text, 0)
-                    chat_box.update_msg("\n\n".join(d["docs"]), 1, streaming=False)
-            chat_box.update_msg(text, 0, streaming=False)
+                    chat_box.update_msg(text)
+                    chat_box.update_msg("\n\n".join(d["docs"]), streaming=False)
+            chat_box.update_msg(text, streaming=False)
 
     now = datetime.now()
     with st.sidebar:
