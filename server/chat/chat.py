@@ -37,7 +37,9 @@ def chat(query: str = Body(..., description="用户输入", examples=["恼羞成
             openai_api_key=llm_model_dict[model_name]["api_key"],
             openai_api_base=llm_model_dict[model_name]["api_base_url"],
             model_name=model_name,
-            openai_proxy=llm_model_dict[model_name].get("openai_proxy")
+            openai_proxy=llm_model_dict[model_name].get("openai_proxy"),
+            temperature = 0,
+            top_p = 0.5
         )
 
         input_msg = History(role="user", content="{{ input }}").to_msg_template(False)

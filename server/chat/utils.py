@@ -2,7 +2,7 @@ import asyncio
 from typing import Awaitable, List, Tuple, Dict, Union
 from pydantic import BaseModel, Field
 from langchain.prompts.chat import ChatMessagePromptTemplate
-
+import re
 
 async def wrap_done(fn: Awaitable, event: asyncio.Event):
     """Wrap an awaitable with a event to signal when it's done or an exception is raised."""
@@ -55,3 +55,10 @@ class History(BaseModel):
             h = cls(**h)
 
         return h
+
+def extract_id(text):
+    id_list = re.findall(r'[a-zA-Z0-9]+', text)
+    return id_list
+
+    # text = '<文本>xxxxa1 利用率低</文本>'
+    # extract_id(text)
