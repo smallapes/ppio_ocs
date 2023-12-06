@@ -99,7 +99,7 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
             for keyword in keywords:
                 pattern = re.compile(keyword)
                 matches = pattern.findall(text)
-                count_dict[keyword] = len(matches)
+                count_dict[keyword] = len(matches) + text.rfind(keyword)
             intent_list = sorted(count_dict, key=lambda x: count_dict[x], reverse=True)
             intent = intent_list[0]
             if count_dict[intent] == 0:
@@ -137,7 +137,7 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
             openai_api_base=llm_model_dict[model_name]["api_base_url"],
             model_name=model_name,
             openai_proxy=llm_model_dict[model_name].get("openai_proxy"),
-            temperature = 0.1,
+            temperature = 0,
             # top_p = 0.5,
             # top_k = 3,
         )
