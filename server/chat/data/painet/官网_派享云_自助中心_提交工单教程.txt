@@ -1,0 +1,26 @@
+**自助中心: 提交工单教程**
+
+  1. 您需要先登录派享云小程序或者网页（ [ https://www.painet.work/login ](https://www.painet.work/login) ）； 
+
+![](https://statics.ppio.cloud/help-
+center/10060/077cefa1-e10e-4184-ac66-2228cf0aa14e.png)
+
+  2. 您可直接打开下列链接提交工单： 
+
+网页端： [ https://www.painet.work/self-tickets ](https://www.painet.work/self-
+tickets)
+
+小程序：#小程序://派享云/nJWYOiUyujuMoXC
+
+  3. 或者您登陆后直接从页面入口进入 
+
+网页端：
+
+![](https://statics.ppio.cloud/help-center/10060/861038be-
+bdbe-4264-9f9b-78a65eb3c614.png)
+
+小程序：
+
+![](https://statics.ppio.cloud/help-
+center/10060/3366fe7c-295f-4b1c-ae20-c1ec332dc779.png)
+

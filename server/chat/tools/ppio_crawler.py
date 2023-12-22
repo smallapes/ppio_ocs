@@ -6,14 +6,13 @@ import html2text
 import re
 from urllib.parse import urlparse
 from configs.server_config import API_PORT
-from server.chat.prompts import platform
 from configs.ppio_config import PAINET_DOC_KB_NAME, SHNAYANYUN_DOC_KB_NAME
 from configs.model_config import CHUNK_SIZE
 
 
 url = 'https://www.shanyancloud.work/api/help/v1'
 
-def get_website(url, website="派享云"):
+def get_website(path, url, website="派享云"):
     tag_url = f"{url}/tags"
     article_base = f'{url}/article'
 
@@ -48,7 +47,7 @@ def get_website(url, website="派享云"):
             title = article.get('title')
             a_url = f"{article_base}/{id}"
             content = get_article(a_url)
-            out_file_name = f"/home/aitest2/maoxianren/langchain-chatchat-dev/server/chat/data/{website}_{name}_{title}.txt"
+            out_file_name = f"{path}/{website}_{name}_{title}.txt"
             with open(out_file_name, 'w') as ofile:
                 ofile.write(f"**{name}: {title}**\n\n")
                 ofile.write(content)
@@ -61,7 +60,7 @@ def find_links(soup, domain):
     return [link['href'] for link in links]
 
 
-def get_feishu_page(depth, total, name, base_url: str, domain: str):
+def get_feishu_page(path, depth, total, name, base_url: str, domain: str):
     # 1. 获取整个页面数据
     html = requests.get(url=base_url,headers={'User-Agent':kuser_agent.get()}).content
     # 2. 提取正文中的HTML文本
@@ -80,9 +79,9 @@ def get_feishu_page(depth, total, name, base_url: str, domain: str):
         links = find_links(bs, domain)
         for link in links:
             print(78, link)
-            get_feishu_page(depth-1, total, name, link, domain)
+            get_feishu_page(path, depth-1, total, name, link, domain)
 
-    out_file_name = f"/home/aitest2/maoxianren/langchain-chatchat-dev/server/chat/data/{name}_{total[0]}.txt"
+    out_file_name = f"{path}/{name}_{total[0]}.txt"
     with open(out_file_name, 'w') as ofile:
         ofile.write(result)
         print(f"保存到{out_file_name}")
@@ -90,11 +89,11 @@ def get_feishu_page(depth, total, name, base_url: str, domain: str):
 
 
 
-def get_feishu(url="https://ppio-cloud.feishu.cn/docx/HKb5dzzACoWiN1xhMlEckOmfn5b", name="飞书_闪燕云"):
+def get_feishu(path, url="https://ppio-cloud.feishu.cn/docx/HKb5dzzACoWiN1xhMlEckOmfn5b", name="飞书_闪燕云"):
     parsed_url = urlparse(url)
     domain = parsed_url.netloc
     total = [0]
-    get_feishu_page(5, total, name, url, domain)
+    get_feishu_page(path, 5, total, name, url, domain)
     
 
 
@@ -142,7 +141,7 @@ def upload_directory(target_directory='/home/shandian/doc_data/ppio_ocs',
 
 
 
-def manage_kb(name="PPIO_OCS_PAINET"):
+def manage_kb(path, name="PPIO_OCS_PAINET"):
     response = requests.get(f'http://0.0.0.0:{API_PORT}/knowledge_base/list_files?knowledge_base_name={name}')
 
     files = []
@@ -172,29 +171,32 @@ def manage_kb(name="PPIO_OCS_PAINET"):
     # print(171, name)
 
     # 上传
-    upload_directory(target_directory='/home/aitest2/maoxianren/langchain-chatchat-dev/server/chat/data', knowledge_base_name=name)
+    upload_directory(target_directory=path, knowledge_base_name=name)
 
-def main():
+def main(platform = "闪燕云"):
     kb_name = PAINET_DOC_KB_NAME
 
     CHUNK_SIZE = 250 # 设置
     from configs.model_config import CHUNK_SIZE as csize
     print(f"CHUNK_SIZE 设置为 {csize}")
     if platform == "派享云":
-        get_website('https://www.painet.work/api/help/v1', '官网_派享云')
-        get_feishu(url="https://ppio-cloud.feishu.cn/docx/doxcna94u9iYLhco0sevTmdMXsh", name="飞书_派享云")
+        path = '/home/aitest2/maoxianren/langchain-chatchat-dev/server/chat/data/painet'
+        get_website(path, 'https://www.painet.work/api/help/v1', '官网_派享云')
+        get_feishu(path, url="https://ppio-cloud.feishu.cn/docx/doxcna94u9iYLhco0sevTmdMXsh", name="飞书_派享云")
     elif platform == "闪燕云":
-        get_website('https://www.shanyancloud.work/api/help/v1', '官网_闪燕云')
-        get_feishu(url="https://ppio-cloud.feishu.cn/docx/HKb5dzzACoWiN1xhMlEckOmfn5b", name="飞书_闪燕云")
+        path = '/home/aitest2/maoxianren/langchain-chatchat-dev/server/chat/data/shanyanyun'
+        get_website(path, 'https://www.shanyancloud.work/api/help/v1', '官网_闪燕云')
+        get_feishu(path, url="https://ppio-cloud.feishu.cn/docx/HKb5dzzACoWiN1xhMlEckOmfn5b", name="飞书_闪燕云")
         kb_name = SHNAYANYUN_DOC_KB_NAME
     else:
         raise ValueError()
 
-    manage_kb(kb_name)
+    manage_kb(path, kb_name)
     CHUNK_SIZE = 250 # 恢复
         
 
 if __name__ == "__main__":
-    main()
+    main("闪燕云")
+    main("派享云")
 
 

@@ -637,15 +637,19 @@ def run_conversation(query = "What's the pulation like in San Francisco, Tokyo, 
             )  # extend conversation with function response
             responses.append(function_response)
 
-        if function_name not in ['get_current_weather', "get_current_population"]:
+        # if function_name not in ['get_current_weather', "get_current_population"]:
+        #     return '\n'.join(responses)
+        if function_name in ["get_demand"]:
             return '\n'.join(responses)
         
         second_response = client.chat.completions.create(
             model="gpt-3.5-turbo-1106",
             messages=messages,
         )  # get a new response from the model where it can see the function response
-        return second_response.choices[0].message.content
-
+        res =  second_response.choices[0].message.content
+        if type(res) != str:
+            res = '未获取到结果'
+        return res
 
 
 if __name__ == "__main__":

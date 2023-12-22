@@ -1,0 +1,120 @@
+分享
+
+闪燕云平台帮助文档
+
+输入“/”快速插入
+
+闪燕云平台帮助文档  ​
+
+一、业务  招募  中心  ​
+
+1. 
+
+[ 各业务配置要求  ](https://www.shanyancloud.work/help-center/10) ​
+
+2. 
+
+可上机需求如下图  ​
+
+![](https://internal-api-drive-
+stream.feishu.cn/space/api/box/stream/download/v2/cover/SUgXb2B14o2piLx4xgOc7cZSnwb/?fallback_source=1&height=1280&mount_node_token=UI3Rd19LNoJn6oxYGGocd8Ecnrc&mount_point=docx_image&policy=equal&width=1280)
+
+二、新手上机指南  ​
+
+1. 
+
+[ 闪燕云官网（注册上机地址）  ](https://www.shanyancloud.work/register) ​
+
+2. 
+
+[ X86服务器上机教程  ](https://www.shanyancloud.work/help-center/12/10125) ​
+
+3. 
+
+[ 镜像包下载地址&镜像安装教程  ](https://www.shanyancloud.work/help-center/12/10125) ​
+
+4. 
+
+[ 提交工单教程  ](https://www.shanyancloud.work/help-center/13/10124) ​
+
+5. 
+
+[ 合同签署流程  ](https://ppio-cloud.feishu.cn/wiki/Cj9YwiHDAiffkok50M6ci3L3nBI) ​
+
+6. 
+
+设备绑定流程  ​
+
+7. 
+
+[ 上机常见FAQ  ](https://ppio-cloud.feishu.cn/docx/DQFbd8wIeol8Wzxr8sicD8HCnQd) ​
+
+![](https://internal-api-drive-
+stream.feishu.cn/space/api/box/stream/download/v2/cover/JGZHbrDVToe9xwxeH8YctgK9np4/?fallback_source=1&height=1280&mount_node_token=D0aIdSAcYoIyoYxamOmcDEaVn1b&mount_point=docx_image&policy=equal&width=1280)
+
+三、FAQ帮助指南  ​
+
+1. 
+
+各业务的跑量和收益怎么样？  ​
+
+•
+
+各个业务、地区的跑量均不太一样，到手收益可以参考下面：  ​
+
+◦
+
+「电信、联通网络」：实际贡献的上行带宽为100Mbps的情况下，折算每月约可得高达200-400元的现金激励  ​
+
+◦
+
+「移动网络」：实际贡献的上行带宽为200Mbps的情况下，折算每月约可得高达300-500元的现金激励  ​
+
+2. 
+
+[ 硬盘配置要求是什么？  ](https://www.shanyancloud.work/help-center/11/10117) ​
+
+3. 
+
+[ 丢包压测的原理是什么？  ](https://www.shanyancloud.work/help-center/11/10116) ​
+
+4. 
+
+[ 如何更换业务？为什么处理速度慢？  ](https://www.shanyancloud.work/help-center/11/10112) ​
+
+​
+
+四、对账提现相关  ​
+
+[ 1、违规扣费规则（SLA）  ](https://www.shanyancloud.work/help-center/14/10127) ​
+
+​
+
+五、自助中心  ​
+
+1. 
+
+[ 详细教程｜光猫开启桥接和IPv6的设置  ](https://www.shanyancloud.work/help-center/13/10119) ​
+
+2. 
+
+[ linux下硬盘坏道自测方法  ](https://www.shanyancloud.work/help-center/13/10121) ​
+
+3. 
+
+[ linux下硬盘io自测方法  ](https://www.shanyancloud.work/help-center/13/10120) ​
+
+​
+
+​
+
+**** **** **** **** **** **** **** **** **** **** **** **** **** **** ****
+**** **** **** **** **** **** **** **** **** **** **** **** **** **** ****
+**** **** **** **** **** **** **** **** **** **** **** **** **** **** ****
+**** **** **** **** **** **** **** **** **** **** **** **** **** **** ****
+**** **** **** **** **** **** **** **** **** **** **** **** **** **** ****
+**** **** **** **** **** **** **** **** **** **** **** **** **** **** ****
+**** **** **** **** **** **** **** **** **** **** **** **** **** **** ****
+**** **** **** **** **** **** **** **** **** **** **** **** **** **** ****
+**** **** **** **** **** **** **** ****
+

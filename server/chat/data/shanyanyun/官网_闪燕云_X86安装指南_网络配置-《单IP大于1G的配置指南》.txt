@@ -1,0 +1,64 @@
+**X86安装指南: 网络配置-《单IP大于1G的配置指南》**
+
+#  1、启动设备
+
+设备启动后，会在界面出现设备 ID 的二维码，此时表示派享云系统安装完成。 此时插上拨号网线。
+
+![](https://statics.ppio.cloud/help-
+center/6/36c11803-f0d2-44bb-b576-9d449b78edaa.png)
+
+#  2、登录 root 账号密码
+
+在 login 后面直接输入“root”，回车，再输入密码（密码可以联系派享云官方获取，此时密码不可见），再回车，输入“nmtui”，再回车；
+
+![](https://statics.ppio.cloud/help-
+center/6/5d59abd5-0fad-434e-a210-9a0dd5768a11.png)
+
+#  3、设置 IP
+
+在 nmtui 的配置界面中选择“Edit a connection”，然后回车
+
+![](https://statics.ppio.cloud/help-
+center/6/3d4a14ea-454b-4a25-9eb6-94a4c39a5972.png)
+
+然后在左侧网卡列表里选择需要设置静态 IP 的的网卡，在右侧选择“Edit”，然后回车。
+
+![](https://statics.ppio.cloud/help-
+center/6/0b6c9526-e997-4393-b2d4-87f7de8f75cd.png)
+
+选择“IPv4 CONFIGURATION”右侧的 “SHOW”展开
+
+![](https://statics.ppio.cloud/help-
+center/6/69187170-bf78-466a-a86d-ba8f7fbf2901.png)
+
+配置好静态 IP，网关，DNS 等，注意此外还需要将 “IPv4
+CONFIGURATION”右侧的“Automatic”修改为“Manual”，然后选择右下角“OK”保存。
+
+![](https://statics.ppio.cloud/help-center/6/308793cd-
+dc79-431b-99ab-c44096d0eb20.png)
+
+回到该界面，继续选择“BACK”退出。
+
+![](https://statics.ppio.cloud/help-
+center/6/5584d6ca-0d69-4767-8868-a019acb7eec5.png)
+
+继续选择“OK”保存退出。
+
+![](https://statics.ppio.cloud/help-
+center/6/fb5feb82-931e-4e40-be21-561ed07b3fd2.png)
+
+运行 “systemctl restart network”重启网络
+
+![](https://statics.ppio.cloud/help-
+center/6/3acdede6-c12c-4cb1-9311-0d36c8137839.png)
+
+运行 “ip a” 命令查看 对应网卡的 ip 是否生效
+
+![](https://statics.ppio.cloud/help-
+center/6/2672f07b-a886-4c95-9555-bfbcbf7757a8.png)
+
+最后 “ping [ www.baidu.com ](http://www.baidu.com/) ” 测试网络是否通畅
+
+![](https://statics.ppio.cloud/help-
+center/6/f21f034a-5a0c-4c53-8418-fb654e2aaf03.png)
+

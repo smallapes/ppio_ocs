@@ -1,0 +1,85 @@
+**自助中心: 详细教程｜光猫开启桥接和IPv6的设置**
+
+在设置光猫开启IPv6之前，一是要确保所在运营商已支持IPv6服务。  二是获取光猫的管理员账号  和密码。  ** 下面以通用的运营商的光猫举例。  **
+
+** ** 一、中国电信的通用家庭光猫设置  ** **
+
+** 光猫：  在电信宽带中就是天翼宽带家庭网关。  **
+
+1、查看光猫背面的光猫IP地址，使用管理员账号密码登入，进入光猫后台。
+
+  * 地址： [ http://192.168.1.1 ](http://192.168.1.1)
+
+  * 用户名：useradmin 
+
+  * 密码：nE7jA%5（  注意：不是普通账号，而是管理员账号，不知道就搜一下或问客服  ） 
+
+![](https://statics.ppio.cloud/help-
+center/10076/326a7854-6080-4fd3-aaab-b856bc553c86.png)
+
+**2、开启桥接和IPv6设置**
+
+可以看到下面这个页面，证明光猫管理端进入成功。
+
+![](https://statics.ppio.cloud/help-
+center/10076/e4be4466-07f4-4ec2-930b-d71e3cb8ba0b.png)
+
+3、  点击网络，会看到网络连接页面。
+
+![](https://statics.ppio.cloud/help-
+center/10076/81ed69d2-e55a-40c4-a76a-5f7d61820856.png)
+
+4、  连接名称选择  ** 3_INTERNET_R_VID_41  ** ,连接模式选择桥接，IP模式为  **IPv4 &IPv6 ** 。点击
+**保存/应用** ，大约等待10s会生效。
+
+![](https://statics.ppio.cloud/help-
+center/10076/e3f9843a-4ce0-47de-83d0-4bb81ac26fbc.png)
+
+此外，如果你  **忘记了PPPoE上网的账号密码** ，也可以在这个页面查看，把  **连接模式**
+选择为PPPoE,可以查看曾经保存的账号密码，密码看不到的话，用Chrome的审查模式，右键密码的输入框，在下图中将password删除，这样就能查看上网密码了。
+
+![](https://statics.ppio.cloud/help-
+center/10076/fe0d8e25-d83b-4305-b30c-7bf6bec653e0.png)
+
+这个PPPoe上网账号密码会在路由器中上网使用
+
+接下来，在 **状态菜单** 中，可以看到IPv4和IPv6已经开启成功。
+
+![](https://statics.ppio.cloud/help-
+center/10076/c5872b10-1449-454a-9d30-8a11e5781557.png)
+
+光猫设置好了，接下来设置服务器上网。
+
+** ** 二、设置华为光猫HG8245C开启IPv6步骤  ** **
+
+**华为HG8245C** 隐藏管理员账  号  **telecomadmin** 的密码，通常为 ** nE7jA%5m  ** 。
+
+以隐藏管理员账  号telecomadmin登录华为HG8245C的Web管理控制台后，选择“ **网络- >宽带设置 ** ”，选择连接”
+**2_INTERNET_R_VID_** ”,设置协议类型为“ **IPv4/IPv6** ”，设置前缀获取方式为“ **DHCPv6-PD**
+”,再点应用即可。
+
+** ** ![](https://statics.ppio.cloud/help-
+center/10076/fd92782d-2cd4-4e8d-9857-0884bf0f7fe2.png) ** **
+
+光猫设置好了，接下来设置服务器上网。
+
+中国联通和移动的方法一样，需要运营商网络已支持IPV6,同样也需要知道光猫的管理员账号和密码来设置：
+
+**问∶中国移动光猫超级密码是多少?**
+
+答∶中国移动光猫华为的HG8546M、中兴F623、吉比特H2-3的超级管理密码都是∶ **aDm8H%MdA**
+
+默认登录管理地址都是∶ **192.168.1.1**
+
+账号∶CMCCAdmin
+
+密码∶ aDm8H%MdA
+
+** ** 光猫开启了桥接和IPV6设置后，开始准备进行服务器上网。首先服务器上网一般为多条单元接入网节点后上网，设备的连接示意图如下：  ** **
+
+** ** ![](https://statics.ppio.cloud/help-
+center/10076/005b623e-eeca-4ee3-b10a-0c1edb82ac6d.png) ** **
+
+** ** 设备连接完成并配置好交换机后，请查看派享云服务器上网指南： [ https://www.painet.work/help-center/2/4
+](https://www.painet.work/help-center/2/4) ** **
+

@@ -29,7 +29,7 @@ from server.chat.agents import run_conversation
 from typing import Callable, Any
 from langchain.chat_models import ChatOpenAI
 import logging
-from configs.ppio_config import KB_NAME, DOC_KB_NAME
+from configs.ppio_config import PAINET_DOC_KB_NAME, PAINET_KB_NAME, SHNAYANYUN_DOC_KB_NAME, SHNAYANYUN_KB_NAME
 
 def get_ChatOpenAI(
         model_name: str,
@@ -74,8 +74,25 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
                         local_doc_url: bool = Body(False, description="知识文件返回本地路径(true)或URL(false)"),
                         request: Request = None,
                         ):
-    kbn = KB_NAME
-    dkbn = DOC_KB_NAME
+    platform1 = ''
+    platform2 = ''
+    if knowledge_base_name == PAINET_KB_NAME:
+        kbn = PAINET_KB_NAME
+        dkbn = PAINET_DOC_KB_NAME
+        platform1 = "派享云"
+        platform2 = "闪燕云"
+
+    elif knowledge_base_name == SHNAYANYUN_KB_NAME:
+        kbn = SHNAYANYUN_KB_NAME
+        dkbn = SHNAYANYUN_DOC_KB_NAME
+        platform1 = "闪燕云"
+        platform2 = "派享云"
+    else:
+        kbn = knowledge_base_name
+        dkbn = knowledge_base_name
+        platform1 = "云平台"
+        platform2 = "派享云或闪燕云"
+
     kb = KBServiceFactory.get_service_by_name(kbn)
     dkb = KBServiceFactory.get_service_by_name(dkbn)
     if kb is None:
@@ -104,7 +121,7 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
                 model_name: str = LLM_MODEL,
                 ):
         qs = "\n".join([doc.page_content.split("答案")[0].split("answer")[0].replace("question", "问题").strip() for doc in docs])
-        ds = "\n".join([f"<文档 {i}>: {doc.page_content[:150]} <文档 {i} />" for i, doc in enumerate(ddocs)])
+        ds = "\n".join([f"<文档 {i}>: {doc.page_content[:150]} </文档 {i}>" for i, doc in enumerate(ddocs)])
         # prompt = PromptTemplate.from_template(intent_prompt)
 
         prompt = intent_prompt.format(qs=qs, ds=ds, instructions_q=instructions_q, user_input=query)
@@ -201,7 +218,7 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
 
         # Begin a task that runs in the background.
         task = asyncio.create_task(wrap_done(
-            chain.acall({"context": context, "question": query}),
+            chain.acall({"context": context, "question": query, "platform": platform1, "platform2": platform2}),
             callback.done),
         )
 
@@ -360,7 +377,7 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
             top_p = 0.5
         )
 
-        prompt = inquiry_prompt.format(functions=functions, user_input=query)
+        prompt = inquiry_prompt.format(functions=functions, user_input=query, platform=platform1, platform2=platform2)
         input_msg = History(role="user", content=prompt).to_msg_template()
         chat_prompt = ChatPromptTemplate.from_messages(
             [i.to_msg_template() for i in history] + [input_msg])
