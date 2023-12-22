@@ -17,12 +17,44 @@ import json
 import os
 from urllib.parse import urlencode
 from server.knowledge_base.kb_doc_api import search_docs
-from server.chat.prompts import intent_prompt, instructions, instructions_q, guidance_prompt, analyze_prompt, qa_prompt, call_artificial, inquiry_prompt, functions, device_info_template
+from server.chat.prompts import intent_prompt, instructions_q, function_call_prompt, analyze_prompt, qa_prompt, call_artificial, inquiry_prompt, functions, device_info_template
 from langchain.prompts import PromptTemplate
 from langchain.schema import BaseOutputParser
 from server.chat.utils import extract_id
 from server.chat.tools.tools_api import DeviceLoad, DeviceNATInfo, DeviceTestInfo, DeviceUsageInfo, TaskRedLine, ChangePointInfo, DeviceTaskid
 import re
+from langchain.agents import AgentType, initialize_agent
+from server.chat.agents import get_device_info, get_change_point
+from server.chat.agents import run_conversation
+from typing import Callable, Any
+from langchain.chat_models import ChatOpenAI
+import logging
+
+def get_ChatOpenAI(
+        model_name: str,
+        temperature: float,
+        max_tokens: int = None,
+        streaming: bool = True,
+        callbacks: List[Callable] = [],
+        verbose: bool = True,
+        **kwargs: Any,
+) -> ChatOpenAI:
+    if model_name == "openai-api":
+        model_name = "gpt-3.5-turbo-1106"
+
+    model = ChatOpenAI(
+        streaming=streaming,
+        verbose=verbose,
+        callbacks=callbacks,
+        openai_api_key="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",
+        openai_api_base="http://45.116.14.16:3001/proxy/v1",
+        model_name=model_name,
+        temperature=temperature,
+        max_tokens=max_tokens,
+        # openai_proxy="",
+        **kwargs
+    )
+    return model
 
 def knowledge_base_chat(query: str = Body(..., description="用户输入", examples=["你好"]),
                         knowledge_base_name: str = Body(..., description="知识库名称", examples=["samples"]),
@@ -52,7 +84,7 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
     from enum import Enum
     class Intent(Enum):
         qa = "智能问答"
-        guidance = "智能引导"
+        guidance = "智能调用"
         analyze = "跑量诊断"
         artificial ="转人工"
         unclear = "不清楚"
@@ -63,12 +95,12 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
                 history: Optional[List[History]],
                 model_name: str = LLM_MODEL,
                 ):
-        qs = "\n".join([doc.page_content.split("答案")[0] for doc in docs])
+        qs = "\n".join([doc.page_content.split("答案")[0].split("answer")[0].replace("question", "问题").strip() for doc in docs])
         
         # prompt = PromptTemplate.from_template(intent_prompt)
 
         prompt = intent_prompt.format(qs=qs, instructions_q=instructions_q, user_input=query)
-        model = OpenAI(
+        model = ChatOpenAI(
             streaming=True,
             verbose=True,
             # callbacks=[callback],
@@ -86,15 +118,18 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
         
         prompt = chat_prompt.format()
 
-        response = model.invoke(prompt)
+        response = model.invoke(prompt).content
+        logging.info("*"*20)
+        logging.info(f"意图请求：{prompt} \n 意图结果：{response}")
+        logging.info("*"*20)
 
         def get_intent(text):
             # 定义关键词列表
-            keywords = ['智能问答', '跑量诊断', '智能引导', '不清楚']
+            keywords = ['智能问答', '跑量诊断', '智能调用', '不清楚']
 
             # 初始化计数器字典
             count_dict = {keyword: 0 for keyword in keywords}
-
+            
             # 遍历关键词，使用正则表达式进行搜索并统计出现次数
             for keyword in keywords:
                 pattern = re.compile(keyword)
@@ -106,7 +141,7 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
                 intent = "转人工"
             if "智能问答" in intent:
                 return Intent.qa
-            elif "智能引导" in intent:
+            elif "智能调用" in intent:
                 return Intent.guidance
             elif "跑量诊断" in intent:
                 return Intent.analyze
@@ -186,31 +221,20 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
 
         await task
 
-    # 智能引导
+    # 智能调用
     async def base_chat_iterator(query: str,
                                 history: Optional[List[History]],
                                 model_name: str = LLM_MODEL,
                                 ) -> AsyncIterable[str]:
 
-        model = OpenAI(
-            streaming=True,
-            verbose=True,
-            openai_api_key=llm_model_dict[model_name]["api_key"],
-            openai_api_base=llm_model_dict[model_name]["api_base_url"],
-            model_name=model_name,
-            openai_proxy=llm_model_dict[model_name].get("openai_proxy"),
-            temperature = 0,
-            top_p = 0.5
-        )
-
-        prompt = guidance_prompt.format(instructions=instructions, user_input=query)
+        prompt = function_call_prompt.format(user_input=query)
         input_msg = History(role="user", content=prompt).to_msg_template()
         chat_prompt = ChatPromptTemplate.from_messages(
             [i.to_msg_template() for i in history] + [input_msg])
         
         prompt = chat_prompt.format()
 
-        response = model.invoke(prompt)
+        response = run_conversation(prompt)
 
         if "转人工" in response:
             response = "转人工"
@@ -234,12 +258,12 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
                                 model_name: str = LLM_MODEL,
                                 ) -> AsyncIterable[str]:
 
-        model = OpenAI(
+        model = ChatOpenAI(
             streaming=True,
             verbose=True,
             openai_api_key=llm_model_dict[model_name]["api_key"],
             openai_api_base=llm_model_dict[model_name]["api_base_url"],
-            model_name=model_name,
+            model_name="gpt-4", # TODO(maoxianren)：
             openai_proxy=llm_model_dict[model_name].get("openai_proxy"),
             temperature = 0,
             top_p = 0.5
@@ -258,21 +282,14 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
         if len(id_list) > 0:
             device_uuid = id_list[0]
             # 若处理设备不存在，抛出异常
-            device_usage_info =  DeviceUsageInfo(device_uuid)
-            device_test_info = DeviceTestInfo(device_uuid)
-            device_nat_info = DeviceNATInfo(device_uuid)
-            device_load = DeviceLoad(device_uuid)
-            task_id = DeviceTaskid(device_uuid)
-            task_redline = TaskRedLine(task_id)
-            change_point = ChangePointInfo(device_uuid)
+            device_usage_info =  get_device_info(device_uuid)
+
+            change_point = get_change_point(device_uuid)
+
+            logging.info(change_point)
             device_info = device_info_template.format(DeviceUsageInfo=device_usage_info,
-                                                      DeviceTestInfo=device_test_info,
-                                                      DeviceNATInfo=device_nat_info,
-                                                      TaskRedLine=task_redline,
-                                                      ChangePointInfo = change_point,
-                                                      DeviceLoad = device_load
-                                                      )
-            
+                                                      ChangePointInfo = change_point, )
+            logging.info(device_info)
         prompt = analyze_prompt.format(user_input=query, device_info=device_info)
 
         input_msg = History(role="user", content=prompt).to_msg_template()
@@ -281,13 +298,25 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
         
         prompt = chat_prompt.format()
 
-        response = model.invoke(prompt)
+        response = model.invoke(prompt).content
+
+        model = ChatOpenAI(
+            streaming=True,
+            verbose=True,
+            openai_api_key=llm_model_dict[model_name]["api_key"],
+            openai_api_base=llm_model_dict[model_name]["api_base_url"],
+            model_name=model_name, # TODO(maoxianren)：
+            openai_proxy=llm_model_dict[model_name].get("openai_proxy"),
+            temperature = 0,
+            top_p = 0.5
+        )
+        response = model.invoke(f"根据分析过程给出结论：{response}。判断设备利用率低是否低，如果低给出原因。限制100字。").content
 
         if "转人工" in response:
             response = "转人工"
 
         if device_info != "":
-            response = response + f"\n\n 附设备信息：{device_info}"
+            response = response + f"\n\n {device_info}"
         if stream:
             for token in response:
             # Use server-sent-events to stream the response
@@ -307,7 +336,7 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
                                 model_name: str = LLM_MODEL,
                                 ) -> AsyncIterable[str]:
 
-        model = OpenAI(
+        model = ChatOpenAI(
             streaming=True,
             verbose=True,
             openai_api_key=llm_model_dict[model_name]["api_key"],
@@ -325,7 +354,7 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
         
         prompt = chat_prompt.format()
 
-        response = model.invoke(prompt)
+        response = model.invoke(prompt).content
 
         if stream:
             for token in response:
@@ -341,6 +370,7 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
                             ensure_ascii=False)
 
     def  chat_iterator(response):
+        
 
         if stream:
             for token in response:
@@ -360,10 +390,10 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
         return StreamingResponse(knowledge_base_chat_iterator(query, kb, top_k, history, model_name),
                              media_type="text/event-stream")
     elif intent == Intent.guidance:
-        return StreamingResponse(base_chat_iterator(query,history, model_name),
+        return StreamingResponse(base_chat_iterator(query, history, model_name),
                              media_type="text/event-stream")
     elif intent == Intent.analyze:
-        return StreamingResponse(analyze_chat_iterator(query,history, model_name),
+        return StreamingResponse(analyze_chat_iterator(query, history, model_name),
                              media_type="text/event-stream")
     elif intent == Intent.unclear:
         return StreamingResponse(inquiry_chat_iterator(query, history, model_name),

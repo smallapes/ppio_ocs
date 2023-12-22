@@ -11,10 +11,13 @@ from pydantic import BaseModel, Field
 from langchain.utilities import SerpAPIWrapper
 from langchain.agents import AgentType, initialize_agent
 
-llm = ChatOpenAI(temperature=0)
+llm = ChatOpenAI(temperature=0,
+            openai_api_key="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",
+            openai_api_base="http://45.116.14.16:3001/proxy/v1",
+            model_name="gpt-3.5-turbo",)
 llm_math_chain = LLMMathChain(llm=llm, verbose=True)
 
-search = SerpAPIWrapper()
+search = SerpAPIWrapper(serpapi_api_key="5f0619a1231f66569a4f7dce9adbf8001b3a21cb6face3c3ac35d6c3dc5981dd")
 
 class UsageTool(BaseTool):
     name = "search1"
