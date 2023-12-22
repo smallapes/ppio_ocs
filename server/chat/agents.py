@@ -316,7 +316,7 @@ def get_change_point(deviceUUID, days=7):
         dt = datetime.fromtimestamp(int(ts)).strftime("%Y-%m-%d %H:%M:%S")
 
         name_info = [f"{k}为{v:.2f} {u}" for k, v, u in zip(feature_labels, info, feature_units)]
-        res += f"异常点 {i + 1}，时间 {dt}, {','.join(name_info)}；"
+        res += f"异常点 {i + 1}，时间 {dt}， {'，'.join(name_info)}；\n"
     logging.info(res)
     return res
 
@@ -340,7 +340,8 @@ def get_demand(location='', isp='', natDetail='', upbandwidthPerLine='', upbandw
                 location = rl.get('location')
                 ispGap = rl.get('ispGap')
                 ispGap = sorted([(k,v) for k, v in ispGap.items() if v != 0 and k in isp], key=lambda x: x[0])
-                res += f"{location if location else region}，{'、'.join([f'{k}' for k, v in ispGap]) }，{recruit_name} 有需求\n"
+                if len(ispGap) > 0:
+                    res += f"{location if location else region}，{'、'.join([f'{k}' for k, v in ispGap]) }，{recruit_name} 有需求；\n"
     else:
         print(r)
         print(r.json())
@@ -548,7 +549,7 @@ tools = [
         "type": "function",
         "function": {
             "name": "get_demand",
-            "description": "查看某个地区的业务需求, 返回时需要返回 地点，运营商，业务名， 回答尽量详细",
+            "description": "查看某个地区的业务需求, 例如查看北京电信需求、上海联通 需求",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -636,7 +637,7 @@ def run_conversation(query = "What's the pulation like in San Francisco, Tokyo, 
             )  # extend conversation with function response
             responses.append(function_response)
 
-        if function_name not in ['']:
+        if function_name not in ['get_current_weather', "get_current_population"]:
             return '\n'.join(responses)
         
         second_response = client.chat.completions.create(

@@ -7,7 +7,8 @@ import re
 from urllib.parse import urlparse
 from configs.server_config import API_PORT
 from server.chat.prompts import platform
-from configs.ppio_config import PAINET_KB_NAME, SHNAYANYUN_KB_NAME
+from configs.ppio_config import PAINET_DOC_KB_NAME, SHNAYANYUN_DOC_KB_NAME
+from configs.model_config import CHUNK_SIZE
 
 
 url = 'https://www.shanyancloud.work/api/help/v1'
@@ -174,19 +175,23 @@ def manage_kb(name="PPIO_OCS_PAINET"):
     upload_directory(target_directory='/home/aitest2/maoxianren/langchain-chatchat-dev/server/chat/data', knowledge_base_name=name)
 
 def main():
-    kb_name = PAINET_KB_NAME
+    kb_name = PAINET_DOC_KB_NAME
 
+    CHUNK_SIZE = 250 # 设置
+    from configs.model_config import CHUNK_SIZE as csize
+    print(f"CHUNK_SIZE 设置为 {csize}")
     if platform == "派享云":
         get_website('https://www.painet.work/api/help/v1', '官网_派享云')
         get_feishu(url="https://ppio-cloud.feishu.cn/docx/doxcna94u9iYLhco0sevTmdMXsh", name="飞书_派享云")
     elif platform == "闪燕云":
         get_website('https://www.shanyancloud.work/api/help/v1', '官网_闪燕云')
         get_feishu(url="https://ppio-cloud.feishu.cn/docx/HKb5dzzACoWiN1xhMlEckOmfn5b", name="飞书_闪燕云")
-        kb_name = SHNAYANYUN_KB_NAME
+        kb_name = SHNAYANYUN_DOC_KB_NAME
     else:
         raise ValueError()
 
     manage_kb(kb_name)
+    CHUNK_SIZE = 250 # 恢复
         
 
 if __name__ == "__main__":

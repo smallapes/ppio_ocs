@@ -17,7 +17,7 @@ import json
 import os
 from urllib.parse import urlencode
 from server.knowledge_base.kb_doc_api import search_docs
-from server.chat.prompts import intent_prompt, instructions_q, function_call_prompt, analyze_prompt, qa_prompt, call_artificial, inquiry_prompt, functions, device_info_template
+from server.chat.prompts import intent_prompt, instructions_q, function_call_prompt, analyze_prompt, qa_prompt, call_artificial, inquiry_prompt, functions, device_info_template, cannot_reolve
 from langchain.prompts import PromptTemplate
 from langchain.schema import BaseOutputParser
 from server.chat.utils import extract_id
@@ -29,6 +29,7 @@ from server.chat.agents import run_conversation
 from typing import Callable, Any
 from langchain.chat_models import ChatOpenAI
 import logging
+from configs.ppio_config import KB_NAME, DOC_KB_NAME
 
 def get_ChatOpenAI(
         model_name: str,
@@ -73,33 +74,40 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
                         local_doc_url: bool = Body(False, description="知识文件返回本地路径(true)或URL(false)"),
                         request: Request = None,
                         ):
-    kb = KBServiceFactory.get_service_by_name(knowledge_base_name)
+    kbn = KB_NAME
+    dkbn = DOC_KB_NAME
+    kb = KBServiceFactory.get_service_by_name(kbn)
+    dkb = KBServiceFactory.get_service_by_name(dkbn)
     if kb is None:
-        return BaseResponse(code=404, msg=f"未找到知识库 {knowledge_base_name}")
+        return BaseResponse(code=404, msg=f"未找到知识库 {kbn}")
+    if dkb is None:
+        return BaseResponse(code=404, msg=f"未找到知识库 {dkbn}")
 
     history = [History.from_data(h) for h in history]
-    docs = search_docs(query, knowledge_base_name, top_k, score_threshold)
+    docs = search_docs(query, kbn, top_k, score_threshold)
+    ddocs = search_docs(query, dkbn, 2, score_threshold)
 
     # 意图分析
     from enum import Enum
     class Intent(Enum):
-        qa = "智能问答"
         guidance = "智能调用"
         analyze = "跑量诊断"
-        artificial ="转人工"
+        qa = "问题集问答"
+        doc = "文档问答"
+        cannot_resolve = "无法解决"
         unclear = "不清楚"
+        artificial ="转人工"
+
 
     def get_intent(query: str,
-                kb: KBService,
-                top_k: int,
                 history: Optional[List[History]],
                 model_name: str = LLM_MODEL,
                 ):
         qs = "\n".join([doc.page_content.split("答案")[0].split("answer")[0].replace("question", "问题").strip() for doc in docs])
-        
+        ds = "\n".join([f"<文档 {i}>: {doc.page_content[:150]} <文档 {i} />" for i, doc in enumerate(ddocs)])
         # prompt = PromptTemplate.from_template(intent_prompt)
 
-        prompt = intent_prompt.format(qs=qs, instructions_q=instructions_q, user_input=query)
+        prompt = intent_prompt.format(qs=qs, ds=ds, instructions_q=instructions_q, user_input=query)
         model = ChatOpenAI(
             streaming=True,
             verbose=True,
@@ -125,7 +133,7 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
 
         def get_intent(text):
             # 定义关键词列表
-            keywords = ['智能问答', '跑量诊断', '智能调用', '不清楚']
+            keywords = [ '智能调用', '跑量诊断', '问题集问答', '文档问答', '无法解决', '不清楚']
 
             # 初始化计数器字典
             count_dict = {keyword: 0 for keyword in keywords}
@@ -139,27 +147,32 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
             intent = intent_list[0]
             if count_dict[intent] == 0:
                 intent = "转人工"
-            if "智能问答" in intent:
-                return Intent.qa
-            elif "智能调用" in intent:
+        
+            if "智能调用" in intent:
                 return Intent.guidance
             elif "跑量诊断" in intent:
                 return Intent.analyze
+            elif "问题集问答" in intent:
+                return Intent.qa
+            elif "文档问答" in intent:
+                return Intent.doc
+            elif "无法解决" in intent:
+                return Intent.cannot_resolve
             elif "不清楚" in intent:
                 return Intent.unclear
-            else:
+            elif "转人工" in intent:
                 return Intent.artificial
+            else:
+                return Intent.cannot_resolve
 
         return get_intent(response)
 
-        
-    intent = get_intent(query, kb, top_k, history, model_name)
+    intent = get_intent(query, history, model_name)
 
 
-    # 智能问答
+    # 问题集问答
     async def knowledge_base_chat_iterator(query: str,
-                                           kb: KBService,
-                                           top_k: int,
+                                           docs: List,
                                            history: Optional[List[History]],
                                            model_name: str = LLM_MODEL,
                                            ) -> AsyncIterable[str]:
@@ -198,7 +211,7 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
             if local_doc_url:
                 url = "file://" + doc.metadata["source"]
             else:
-                parameters = urlencode({"knowledge_base_name": knowledge_base_name, "file_name":filename})
+                parameters = urlencode({"knowledge_base_name": kbn, "file_name":filename})
                 url = f"{request.base_url}knowledge_base/download_doc?" + parameters
             text = f"""出处 [{inum + 1}] [{filename}]({url}) \n\n{doc.page_content}\n\n"""
             source_documents.append(text)
@@ -370,8 +383,6 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
                             ensure_ascii=False)
 
     def  chat_iterator(response):
-        
-
         if stream:
             for token in response:
             # Use server-sent-events to stream the response
@@ -386,18 +397,25 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
                             ensure_ascii=False)
 
 
-    if intent == Intent.qa:
-        return StreamingResponse(knowledge_base_chat_iterator(query, kb, top_k, history, model_name),
-                             media_type="text/event-stream")
-    elif intent == Intent.guidance:
-        return StreamingResponse(base_chat_iterator(query, history, model_name),
+
+    if intent == Intent.guidance:
+        return StreamingResponse(base_chat_iterator(query,  history, model_name),
                              media_type="text/event-stream")
     elif intent == Intent.analyze:
         return StreamingResponse(analyze_chat_iterator(query, history, model_name),
                              media_type="text/event-stream")
+    elif intent == Intent.qa:
+        return StreamingResponse(knowledge_base_chat_iterator(query, docs, history, model_name),
+                             media_type="text/event-stream")
+    elif intent == Intent.doc:
+        return StreamingResponse(knowledge_base_chat_iterator(query, ddocs, history, model_name),
+                             media_type="text/event-stream")
+    elif intent == Intent.cannot_resolve:
+        return StreamingResponse(chat_iterator(cannot_reolve),
+                            media_type="text/event-stream")
     elif intent == Intent.unclear:
         return StreamingResponse(inquiry_chat_iterator(query, history, model_name),
-                             media_type="text/event-stream")
+                        media_type="text/event-stream")
     else:
         return StreamingResponse(chat_iterator(call_artificial),
                         media_type="text/event-stream")
