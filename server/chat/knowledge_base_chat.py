@@ -162,6 +162,7 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
                 count_dict[keyword] = len(matches) + text.rfind(keyword)
             intent_list = sorted(count_dict, key=lambda x: count_dict[x], reverse=True)
             intent = intent_list[0]
+            logging.info(f"最终需求结果: {intent}")
             if count_dict[intent] == 0:
                 intent = "转人工"
         
