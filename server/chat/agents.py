@@ -656,6 +656,8 @@ def run_conversation(query = "What's the pulation like in San Francisco, Tokyo, 
             res = '未获取到结果'
         logging.info(f"{fprefix}: {res}")
         return res
+    else:
+        return response_message.content
 
 
 if __name__ == "__main__":
@@ -694,7 +696,7 @@ if __name__ == "__main__":
     # **切换推荐4/5**
     # print(get_recommend("120088f7eb5115c4a48ac8c72ef1b111"))
     # print(run_conversation("120088f7eb5115c4a48ac8c72ef1b111可以切啥"))
-    print(run_conversation("d2f09d14cb6240b7bfb0d59f322090df可以切啥"))
+    # print(run_conversation("d2f09d14cb6240b7bfb0d59f322090df可以切啥"))
     # device_uuids = ["120088f7eb5115c4a48ac8c72ef1b111"]
     # for id in device_uuids:
     #     print(get_recommend(id))
