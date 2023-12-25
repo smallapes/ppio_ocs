@@ -6,7 +6,7 @@ import time
 import logging
 from datetime import datetime
 
-
+fprefix = "智能调用"
 def warn(info):
     logging.info(info)
 
@@ -67,9 +67,9 @@ def is_redline_matched_api_single(deviceUUID, task):
         r = requests.post(url, data=json.dumps(data, ensure_ascii=False).encode('utf-8'), headers=headers)  # 发送到服务端
         prams = json.loads(r.text)
         if prams['devicesBusinessRedline'][0]["pass"]:
-            res =  f"{deviceUUID} 符合 {task} 要求，可以部署"
+            res =  f"{deviceUUID} 符合{task}要求，可以部署"
         else:
-            res =  f"{deviceUUID} 不符合 {task} 要求，不能部署"
+            res =  f"{deviceUUID} 不符合{task}要求，不能部署"
     except:
         res = "未获得结果，请检查设备号和任务！"
     logging.info(res)
@@ -324,13 +324,15 @@ def get_change_point(deviceUUID, days=7):
 def get_demand(location='', isp='', natDetail='', upbandwidthPerLine='', upbandwidth='', networkType='', diskType='', deviceUUID=''):
     data = {'location': location, 'isp': isp, 'natDetail': natDetail, 'upbandwidthPerLine': upbandwidthPerLine, 
             'upbandwidth': upbandwidth, 'networkType': networkType, "diskType": diskType, 'deviceUUID': deviceUUID}
+    fprefix = "看需求"
     headers = {'content-type': "application/json", 'Authorization': API_TOKEN}
     url = API_URL+"/v1/user/operating_requirement"
     r = requests.get(url, params=data, headers=headers)  # 发送到服务端
     demand = json.loads(r.text)
-    res = '需求：\n'
+    res = ''
     print('get_demand', data)
     if r.status_code == 200:
+        logging.info(f"{fprefix}: {r.json()}")
         data_list = demand.get('list', [])
         for item in data_list:
             recruit_name = item.get('recruitName')
@@ -339,13 +341,15 @@ def get_demand(location='', isp='', natDetail='', upbandwidthPerLine='', upbandw
                 region = rl.get('region')
                 location = rl.get('location')
                 ispGap = rl.get('ispGap')
-                ispGap = sorted([(k,v) for k, v in ispGap.items() if v != 0 and k in isp], key=lambda x: x[0])
+                ispGap = sorted([(k,v) for k, v in ispGap.items() if ( v != 0 and k in isp ) or isp == ''], key=lambda x: x[0])
                 if len(ispGap) > 0:
                     res += f"{location if location else region}，{'、'.join([f'{k}' for k, v in ispGap]) }，{recruit_name} 有需求；\n"
     else:
         print(r)
         print(r.json())
     print('get_demand', res)
+    if res == '':
+        res = "无需求"
     return res
 
 
@@ -403,22 +407,12 @@ def get_recommend(deviceUUID=''):
             tasks.append([rn, sort_value])
         sort_tasks = sorted(tasks, key = lambda x: x[1])
         sort_tasks = [f"推荐{i+1}，{item[0]}"for i, item in enumerate(sort_tasks)]
-        res = f'{deviceUUID} 推荐任务：{";".join(sort_tasks)}。'
+        if len(sort_tasks) > 0:
+            res = f'{deviceUUID} 推荐任务：{";".join(sort_tasks)}。'
     return res
 
 
 # ---------------------- 函数调用 ----------------------
-available_functions = {
-    "get_current_weather": get_current_weather,
-    "get_current_population": get_current_population,
-    "is_redline_matched_api_single": is_redline_matched_api_single,
-    "get_device_info": get_device_info,
-    "get_task_redline": get_task_redline,
-    'get_demand': get_demand,
-    'get_acceptance': get_acceptance,
-    'get_recommend': get_recommend,
-}  # only one function in this example, but you can have multiple
-
 tools = [
     {
         "type": "function",
@@ -515,7 +509,7 @@ tools = [
         "type": "function",
         "function": {
             "name": "get_acceptance",
-            "description": "查看xxxxx设备的验收状态",
+            "description": "查看xxxxx设备的验收状态, xxxxxx 验收，xxxxxx 设备验收",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -532,7 +526,7 @@ tools = [
         "type": "function",
         "function": {
             "name": "get_recommend",
-            "description": "xxxx推荐任务，xxxx切换推荐，xxxx可以部署啥",
+            "description": "xxxx推荐任务，xxxx切换推荐，xxxx可以部署啥，xxxx可以切啥",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -588,6 +582,16 @@ tools = [
     }
 ]
 
+available_functions = {
+    "get_current_weather": get_current_weather,
+    "get_current_population": get_current_population,
+    "is_redline_matched_api_single": is_redline_matched_api_single,
+    "get_device_info": get_device_info,
+    "get_task_redline": get_task_redline,
+    'get_demand': get_demand,
+    'get_acceptance': get_acceptance,
+    'get_recommend': get_recommend,
+}  # only one function in this example, but you can have multiple
 
 
 def run_conversation(query = "What's the pulation like in San Francisco, Tokyo, and Paris?"):
@@ -620,6 +624,7 @@ def run_conversation(query = "What's the pulation like in San Francisco, Tokyo, 
         responses = []
         for tool_call in tool_calls:
             function_name = tool_call.function.name
+            logging.info(f"{fprefix}: {function_name}")
             function_to_call = available_functions[function_name]
             function_args = json.loads(tool_call.function.arguments)
             function_response = function_to_call(
@@ -639,7 +644,7 @@ def run_conversation(query = "What's the pulation like in San Francisco, Tokyo, 
 
         # if function_name not in ['get_current_weather', "get_current_population"]:
         #     return '\n'.join(responses)
-        if function_name in ["get_demand"]:
+        if function_name in ["get_demand", "get_recommend", "is_redline_matched_api_single", "get_acceptance", "get_task_redline"]:
             return '\n'.join(responses)
         
         second_response = client.chat.completions.create(
@@ -649,6 +654,7 @@ def run_conversation(query = "What's the pulation like in San Francisco, Tokyo, 
         res =  second_response.choices[0].message.content
         if type(res) != str:
             res = '未获取到结果'
+        logging.info(f"{fprefix}: {res}")
         return res
 
 
@@ -682,11 +688,13 @@ if __name__ == "__main__":
     # **查需求3/5**
     # print(get_demand())
     # print(run_conversation("上海 电信 联通 需求"))
+    # print(run_conversation("广东 需求"))
 
 
     # **切换推荐4/5**
     # print(get_recommend("120088f7eb5115c4a48ac8c72ef1b111"))
     # print(run_conversation("120088f7eb5115c4a48ac8c72ef1b111可以切啥"))
+    print(run_conversation("d2f09d14cb6240b7bfb0d59f322090df可以切啥"))
     # device_uuids = ["120088f7eb5115c4a48ac8c72ef1b111"]
     # for id in device_uuids:
     #     print(get_recommend(id))

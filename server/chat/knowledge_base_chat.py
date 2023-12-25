@@ -120,8 +120,8 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
                 history: Optional[List[History]],
                 model_name: str = LLM_MODEL,
                 ):
-        qs = "\n".join([doc.page_content.split("答案")[0].split("answer")[0].replace("question", "问题").strip() for doc in docs])
-        ds = "\n".join([f"<文档 {i}>: {doc.page_content[:150]} </文档 {i}>" for i, doc in enumerate(ddocs)])
+        qs = "\n".join([f"问题{i+1}"+ doc.page_content.split("答案")[0].split("answer")[0].replace("question", "").strip() for i, doc in enumerate(docs)])
+        ds = "\n".join([f"<文档 {i+1}>: {doc.page_content[:150]} </文档 {i}>" for i, doc in enumerate(ddocs)])
         # prompt = PromptTemplate.from_template(intent_prompt)
 
         prompt = intent_prompt.format(qs=qs, ds=ds, instructions_q=instructions_q, user_input=query)
@@ -335,7 +335,7 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
             verbose=True,
             openai_api_key=llm_model_dict[model_name]["api_key"],
             openai_api_base=llm_model_dict[model_name]["api_base_url"],
-            model_name=model_name, # TODO(maoxianren)：
+            model_name='gpt-4', # TODO(maoxianren)：
             openai_proxy=llm_model_dict[model_name].get("openai_proxy"),
             temperature = 0,
             top_p = 0.5
