@@ -703,4 +703,4 @@ if __name__ == "__main__":
     # **是否符合红线5/5**
     # print(run_conversation("4d62ee0501bbd8d96f9c6d857c3e2737 能上长b吗"))
 
-    pass
+    print(run_conversation("你好"))
