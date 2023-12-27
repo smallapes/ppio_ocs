@@ -97,7 +97,8 @@ def get_device_info(deviceUUID):
                 if f == '':
                     return f
                 return f"{int(f*100)} %"
-            res =  f"""设备信息：NAT类型, {info.get('realtimeNATTypeType', '')}，设备昨日利用率为 {pf(info.get('bandwidthRatio', ''))}， 业务区域昨日利用率为 {pf(info.get('bandwidthRatioOfBusinessAndArea', ''))}，压测信息为 极限压测满意度 {pf(test_result.get("upbandwidthTestSatisfaction", ''))}，丢包压测满意度 {pf(test_result.get("upbandwidthTestSatisfactionWithTCP", ''))}; \n 业务红线：{task_redline};
+            real_task_recruit = [taskid_2_recruit.get(task_id, '') for task_id in real_task]
+            res =  f"""设备信息：NAT类型， {info.get('realtimeNATTypeType', '')}，业务 {real_task_recruit}，设备昨日利用率为 {pf(info.get('bandwidthRatio', ''))}， 业务区域昨日利用率为 {pf(info.get('bandwidthRatioOfBusinessAndArea', ''))}，压测信息为 极限压测满意度 {pf(test_result.get("upbandwidthTestSatisfaction", ''))}，丢包压测满意度 {pf(test_result.get("upbandwidthTestSatisfactionWithTCP", ''))}; \n 业务红线：{task_redline};
                     """
     except:
         res = "未获得结果，请检查设备id是否正确"
@@ -367,9 +368,9 @@ def get_acceptance(deviceUUID=''):
 
             recruit_name = ",".join([taskid_2_recruit.get(task_id) for task_id in realTasks if taskid_2_recruit.get(task_id) is not None])
             if len(realTasks) == 1 and realTasks[0] == 'zjtd' and zjDeployState == "验收通过":
-                res = f"{deviceUUID}  验收 {recruit_name} 成功"
-            elif set(realTasks) == set(specificTasks):
-                res = f" {deviceUUID} 验收 {recruit_name} 成功"
+                res = f"{deviceUUID}  验收业务 {recruit_name} 成功"
+            elif len(set(specificTasks)) > 0 and set(realTasks) == set(specificTasks):
+                res = f" {deviceUUID} 验收业务 {recruit_name} 成功"
     return res
 
 
@@ -469,7 +470,7 @@ tools = [
         "type": "function",
         "function": {
             "name": "get_device_info",
-            "description": "查看xxxxx设备的NAT类型，昨日利用率，设备业务的区域昨日利用率，压测满意度",
+            "description": "查看xxxxx设备的NAT类型， 业务，昨日利用率，设备业务的区域昨日利用率，压测满意度",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -589,7 +590,7 @@ available_functions = {
 }  # only one function in this example, but you can have multiple
 
 
-def run_conversation(query = "What's the pulation like in San Francisco, Tokyo, and Paris?", model_name="gpt-3.5-turbo-1106"):
+def run_conversation(query = "What's the pulation like in San Francisco, Tokyo, and Paris?", history=[], model_name="gpt-3.5-turbo-1106"):
     from openai import OpenAI
 
     client = OpenAI(
@@ -600,7 +601,10 @@ def run_conversation(query = "What's the pulation like in San Francisco, Tokyo, 
 
     # Step 1: send the conversation and available functions to the model
     messages = [{"role": "user", "content": query}]
-   
+    if len(history) > 0:
+        h = history[-1]
+        messages.append({'role': h.role, 'content': h.content})
+    logging.info(f"{fprefix}: {messages}")
     response = client.chat.completions.create(
         model=model_name, # TODO (猫仙人)
         messages=messages,

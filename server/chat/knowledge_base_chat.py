@@ -161,7 +161,12 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
             for keyword in keywords:
                 pattern = re.compile(keyword)
                 matches = pattern.findall(text)
-                count_dict[keyword] = len(matches) + text.rfind(keyword)
+                if len(matches) == 0:
+                    count_dict[keyword] = - 100000
+                    logging.info(f"{keyword} {count_dict[keyword]}")
+                    continue
+                count_dict[keyword] = len(matches) + len(text) - text.find(keyword)
+                logging.info(f"{keyword} {len(matches)} {len(text) - text.find(keyword)} {count_dict[keyword]}")
             intent_list = sorted(count_dict, key=lambda x: count_dict[x], reverse=True)
             intent = intent_list[0]
             logging.info(f"最终需求结果: {intent}")
@@ -267,7 +272,7 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
         
         prompt = chat_prompt.format()
 
-        response = run_conversation(prompt, model_name)
+        response = run_conversation(prompt, history, model_name)
 
         if "转人工" in response:
             response = "转人工"
