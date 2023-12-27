@@ -25,7 +25,7 @@ from server.chat.tools.tools_api import DeviceLoad, DeviceNATInfo, DeviceTestInf
 import re
 from langchain.agents import AgentType, initialize_agent
 from server.chat.agents import get_device_info, get_change_point
-from server.chat.agents import run_conversation
+from server.chat.agents import run_conversation, recruit_2_taskid
 from typing import Callable, Any
 from langchain.chat_models import ChatOpenAI
 import logging
@@ -76,6 +76,7 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
                         ):
     platform1 = ''
     platform2 = ''
+    history = history[:6]
     if knowledge_base_name == PAINET_KB_NAME:
         kbn = PAINET_KB_NAME
         dkbn = PAINET_DOC_KB_NAME
@@ -123,8 +124,8 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
         qs = "\n".join([f"问题{i+1}"+ doc.page_content.split("答案")[0].split("answer")[0].replace("question", "").strip() for i, doc in enumerate(docs)])
         ds = "\n".join([f"<文档 {i+1}>: {doc.page_content[:150]} </文档 {i}>" for i, doc in enumerate(ddocs)])
         # prompt = PromptTemplate.from_template(intent_prompt)
-
-        prompt = intent_prompt.format(qs=qs, ds=ds, instructions_q=instructions_q, user_input=query)
+        bs = '、'.join(list(recruit_2_taskid))
+        prompt = intent_prompt.format(qs=qs, ds=ds, instructions_q=instructions_q, user_input=query, business_ids=bs)
         model = ChatOpenAI(
             streaming=True,
             verbose=True,
@@ -144,9 +145,10 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
         prompt = chat_prompt.format()
 
         response = model.invoke(prompt).content
-        logging.info("*"*20)
-        logging.info(f"意图请求：{prompt} \n 意图结果：{response}")
-        logging.info("*"*20)
+
+        history.append(History(role="assistant", content=response))
+        logging.info(f"意图请求：{prompt}")
+        logging.info(f"意图分析：{response}")
 
         def get_intent(text):
             # 定义关键词列表
@@ -265,7 +267,7 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
         
         prompt = chat_prompt.format()
 
-        response = run_conversation(prompt)
+        response = run_conversation(prompt, model_name)
 
         if "转人工" in response:
             response = "转人工"
@@ -294,7 +296,7 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
             verbose=True,
             openai_api_key=llm_model_dict[model_name]["api_key"],
             openai_api_base=llm_model_dict[model_name]["api_base_url"],
-            model_name="gpt-4", # TODO(maoxianren)：
+            model_name=model_name, # TODO(maoxianren)：
             openai_proxy=llm_model_dict[model_name].get("openai_proxy"),
             temperature = 0,
             top_p = 0.5
@@ -336,7 +338,7 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
             verbose=True,
             openai_api_key=llm_model_dict[model_name]["api_key"],
             openai_api_base=llm_model_dict[model_name]["api_base_url"],
-            model_name='gpt-4', # TODO(maoxianren)：
+            model_name=model_name, # TODO(maoxianren)：
             openai_proxy=llm_model_dict[model_name].get("openai_proxy"),
             temperature = 0,
             top_p = 0.5

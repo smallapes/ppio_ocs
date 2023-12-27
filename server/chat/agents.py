@@ -72,7 +72,6 @@ def is_redline_matched_api_single(deviceUUID, task):
             res =  f"{deviceUUID} 不符合{task}要求，不能部署"
     except:
         res = "未获得结果，请检查设备号和任务！"
-    logging.info(res)
     return res
 
 import traceback
@@ -103,7 +102,6 @@ def get_device_info(deviceUUID):
     except:
         res = "未获得结果，请检查设备id是否正确"
         traceback.print_exc()
-    logging.info(res)
     return res
 
 
@@ -317,7 +315,6 @@ def get_change_point(deviceUUID, days=7):
 
         name_info = [f"{k}为{v:.2f} {u}" for k, v, u in zip(feature_labels, info, feature_units)]
         res += f"异常点 {i + 1}，时间 {dt}， {'，'.join(name_info)}；\n"
-    logging.info(res)
     return res
 
 
@@ -330,7 +327,6 @@ def get_demand(location='', isp='', natDetail='', upbandwidthPerLine='', upbandw
     r = requests.get(url, params=data, headers=headers)  # 发送到服务端
     demand = json.loads(r.text)
     res = ''
-    print('get_demand', data)
     if r.status_code == 200:
         logging.info(f"{fprefix}: {r.json()}")
         data_list = demand.get('list', [])
@@ -347,7 +343,6 @@ def get_demand(location='', isp='', natDetail='', upbandwidthPerLine='', upbandw
     else:
         print(r)
         print(r.json())
-    print('get_demand', res)
     if res == '':
         res = "无需求"
     return res
@@ -594,7 +589,7 @@ available_functions = {
 }  # only one function in this example, but you can have multiple
 
 
-def run_conversation(query = "What's the pulation like in San Francisco, Tokyo, and Paris?"):
+def run_conversation(query = "What's the pulation like in San Francisco, Tokyo, and Paris?", model_name="gpt-3.5-turbo-1106"):
     from openai import OpenAI
 
     client = OpenAI(
@@ -607,7 +602,7 @@ def run_conversation(query = "What's the pulation like in San Francisco, Tokyo, 
     messages = [{"role": "user", "content": query}]
    
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo-1106", # TODO (猫仙人)
+        model=model_name, # TODO (猫仙人)
         messages=messages,
         tools=tools,
         tool_choice="auto",  # auto is default, but we'll be explicit
@@ -641,23 +636,25 @@ def run_conversation(query = "What's the pulation like in San Francisco, Tokyo, 
                 }
             )  # extend conversation with function response
             responses.append(function_response)
+            logging.info(f"{fprefix}: {function_name}, {function_response}")
 
         # if function_name not in ['get_current_weather', "get_current_population"]:
         #     return '\n'.join(responses)
-        if function_name in ["get_demand", "get_recommend", "is_redline_matched_api_single", "get_acceptance", "get_task_redline"]:
-            return '\n'.join(responses)
+        # if function_name in ["get_demand", "get_recommend", "is_redline_matched_api_single", "get_acceptance", "get_task_redline"]:
+        #     return '\n'.join(responses)
         
         second_response = client.chat.completions.create(
-            model="gpt-3.5-turbo-1106",
+            model=model_name,
             messages=messages,
         )  # get a new response from the model where it can see the function response
         res =  second_response.choices[0].message.content
         if type(res) != str:
             res = '未获取到结果'
-        logging.info(f"{fprefix}: {res}")
-        return res
+
     else:
-        return response_message.content
+        res = response_message.content
+    logging.info(f"{fprefix}: {res}")
+    return res
 
 
 if __name__ == "__main__":
