@@ -272,7 +272,9 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
         
         prompt = chat_prompt.format()
 
-        response = run_conversation(prompt, history, model_name)
+        response = run_conversation(prompt, history, model_name,
+                                     device_info_template_1=device_info_template, 
+                                    analyze_prompt_1=analyze_prompt)
 
         if "转人工" in response:
             response = "转人工"

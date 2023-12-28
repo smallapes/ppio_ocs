@@ -33,22 +33,9 @@ def get_taskid_map():
     return recruit_2_taskid
 
 get_taskid_map()
-print(33, list(recruit_2_taskid), list(taskid_2_recruit))
+logging.info(f"招募名, {list(recruit_2_taskid)}")
 
 token = 'Bearer RNlnM2mr18YRsRnv030HqBs15wMOakG53sO3j9ycOevnlkxSCD9w55JInVm0CAH9'
-
-
-def get_current_weather(location):
-    """Get the current weather in a given location"""
-    search = SerpAPIWrapper(serpapi_api_key="5f0619a1231f66569a4f7dce9adbf8001b3a21cb6face3c3ac35d6c3dc5981dd")
-    return search.run(f"{location}的今天气温如何？")
-    
-
-def get_current_population(location):
-    """Get the current population in a given location"""
-    search = SerpAPIWrapper(serpapi_api_key="5f0619a1231f66569a4f7dce9adbf8001b3a21cb6face3c3ac35d6c3dc5981dd")
-    return search.run(f"{location}的有多少人口？")
-
 
 def is_redline_matched_api_single(deviceUUID, task):
     recruit_2_taskid = get_taskid_map()
@@ -316,6 +303,8 @@ def get_change_point(deviceUUID, days=7):
 
         name_info = [f"{k}为{v:.2f} {u}" for k, v, u in zip(feature_labels, info, feature_units)]
         res += f"异常点 {i + 1}，时间 {dt}， {'，'.join(name_info)}；\n"
+    if res == "":
+        res = "无"
     return res
 
 
@@ -407,43 +396,68 @@ def get_recommend(deviceUUID=''):
             res = f'{deviceUUID} 推荐任务：{";".join(sort_tasks)}。'
     return res
 
+# 跑量诊断
+from typing import AsyncIterable, List, Optional
+from configs.model_config import (llm_model_dict, LLM_MODEL, PROMPT_TEMPLATE,
+                                  VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD)
+from server.chat.utils import History
+from langchain.chat_models import ChatOpenAI
+from server.chat.utils import extract_id
 
+from langchain.prompts.chat import ChatPromptTemplate
+model_name = LLM_MODEL
+history = []
+device_info_template = ""
+analyze_prompt = ""
+def analyze_usage(deviceUUID: str):
+        model = ChatOpenAI(
+            streaming=True,
+            verbose=True,
+            openai_api_key=llm_model_dict[model_name]["api_key"],
+            openai_api_base=llm_model_dict[model_name]["api_base_url"],
+            model_name=model_name, # TODO(maoxianren)：
+            openai_proxy=llm_model_dict[model_name].get("openai_proxy"),
+            temperature = 0,
+            top_p = 0.5
+        )
+
+        device_usage_info =  get_device_info(deviceUUID)
+
+        change_point = get_change_point(deviceUUID)
+
+        logging.info(change_point)
+        device_info = device_info_template.format(DeviceUsageInfo=device_usage_info,
+                                                    ChangePointInfo = change_point, )
+        logging.info(device_info)
+        prompt = analyze_prompt.format(user_input=f"该设备为啥跑量低", device_info=device_info)
+
+        input_msg = History(role="user", content=prompt).to_msg_template()
+        chat_prompt = ChatPromptTemplate.from_messages(
+            [i.to_msg_template() for i in history] + [input_msg])
+        
+        prompt = chat_prompt.format()
+
+        response = model.invoke(prompt).content
+
+        model = ChatOpenAI(
+            streaming=True,
+            verbose=True,
+            openai_api_key=llm_model_dict[model_name]["api_key"],
+            openai_api_base=llm_model_dict[model_name]["api_base_url"],
+            model_name=model_name, # TODO(maoxianren)：
+            openai_proxy=llm_model_dict[model_name].get("openai_proxy"),
+            temperature = 0,
+            top_p = 0.5
+        )
+        response = model.invoke(f"根据分析过程给出结论：{response}。判断设备利用率低是否低，如果低给出原因。限制100字。").content
+
+        if device_info != "":
+            response = response + f"\n\n {device_info}"
+        res = f"{deviceUUID}: \n {response}"
+        return res
+            
 # ---------------------- 函数调用 ----------------------
 tools = [
-    {
-        "type": "function",
-        "function": {
-            "name": "get_current_weather",
-            "description": "查询一个位置的当前的气温",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "location": {
-                        "type": "string",
-                        "description": "The city and state, e.g. San Francisco, CA",
-                    }
-                },
-                "required": ["location"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "get_current_population",
-            "description": "查询一个位置的当前的人口数",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "location": {
-                        "type": "string",
-                        "description": "省市、县等行政规划，黄山等自然规划, 例如、北京",
-                    }
-                },
-                "required": ["location"],
-            },
-        },
-    },
     {
         "type": "function",
         "function": {
@@ -477,6 +491,23 @@ tools = [
                     "deviceUUID": {
                         "type": "string",
                         "description": "设备号，比较长，例如3f725d53e56f494d9cab9f50e6b6ffe3",
+                    },
+                },
+                "required": ["deviceUUID"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "analyze_usage",
+            "description": "关于某个设备跑量低的或者xxx跑量低, 分析跑量低、不跑了等跟跑量有关的问题",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "deviceUUID": {
+                        "type": "string",
+                        "description": "设备号，约32数字字母组成的字符串，例如3f725d53e56f494d9cab9f50e6b6ffe3",
                     },
                 },
                 "required": ["deviceUUID"],
@@ -579,8 +610,7 @@ tools = [
 ]
 
 available_functions = {
-    "get_current_weather": get_current_weather,
-    "get_current_population": get_current_population,
+    "analyze_usage": analyze_usage,
     "is_redline_matched_api_single": is_redline_matched_api_single,
     "get_device_info": get_device_info,
     "get_task_redline": get_task_redline,
@@ -589,9 +619,20 @@ available_functions = {
     'get_recommend': get_recommend,
 }  # only one function in this example, but you can have multiple
 
-
-def run_conversation(query = "What's the pulation like in San Francisco, Tokyo, and Paris?", history=[], model_name="gpt-3.5-turbo-1106"):
-    from openai import OpenAI
+from openai import OpenAI
+def run_conversation(query = "What's the pulation like in San Francisco, Tokyo, and Paris?", 
+                     history_1=[],
+                     model_name_1="gpt-3.5-turbo-1106",
+                     device_info_template_1='',
+                     analyze_prompt_1=''):
+    global device_info_template 
+    global analyze_prompt
+    global model_name
+    global history
+    device_info_template = device_info_template_1
+    analyze_prompt = analyze_prompt_1
+    model_name = model_name_1
+    history = history_1
 
     client = OpenAI(
             api_key="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",
@@ -600,13 +641,14 @@ def run_conversation(query = "What's the pulation like in San Francisco, Tokyo, 
             )
 
     # Step 1: send the conversation and available functions to the model
+    messages = [{"role": "system", "content": f"可能需要多次调用函数，不要遗漏"}]
     messages = [{"role": "user", "content": query}]
-    if len(history) > 0:
-        h = history[-1]
+    if len(history_1) > 0:
+        h = history_1[-1]
         messages.append({'role': h.role, 'content': h.content})
     logging.info(f"{fprefix}: {messages}")
     response = client.chat.completions.create(
-        model=model_name, # TODO (猫仙人)
+        model=model_name_1, # TODO (猫仙人)
         messages=messages,
         tools=tools,
         tool_choice="auto",  # auto is default, but we'll be explicit
@@ -614,6 +656,7 @@ def run_conversation(query = "What's the pulation like in San Francisco, Tokyo, 
     response_message = response.choices[0].message
     tool_calls = response_message.tool_calls
     # Step 2: check if the model wanted to call a function
+    logging.info(f"{fprefix}: ，{tool_calls}")
     if tool_calls:
         # Step 3: call the function
         # Note: the JSON response may not always be valid; be sure to handle errors
@@ -623,9 +666,9 @@ def run_conversation(query = "What's the pulation like in San Francisco, Tokyo, 
         responses = []
         for tool_call in tool_calls:
             function_name = tool_call.function.name
-            logging.info(f"{fprefix}: {function_name}")
             function_to_call = available_functions[function_name]
             function_args = json.loads(tool_call.function.arguments)
+            logging.info(f"{fprefix}: 函数，{function_name}， 参数， {function_args}")
             function_response = function_to_call(
                 **function_args
                 # location=function_args.get("location"),
@@ -640,15 +683,15 @@ def run_conversation(query = "What's the pulation like in San Francisco, Tokyo, 
                 }
             )  # extend conversation with function response
             responses.append(function_response)
-            logging.info(f"{fprefix}: {function_name}, {function_response}")
+            logging.info(f"{fprefix}:函数 {function_name}，结果 {function_response}")
 
         # if function_name not in ['get_current_weather', "get_current_population"]:
         #     return '\n'.join(responses)
-        # if function_name in ["get_demand", "get_recommend", "is_redline_matched_api_single", "get_acceptance", "get_task_redline"]:
-        #     return '\n'.join(responses)
+        if function_name in ["analyze_usage"]:
+            return '\n'.join(responses)
         
         second_response = client.chat.completions.create(
-            model=model_name,
+            model=model_name_1,
             messages=messages,
         )  # get a new response from the model where it can see the function response
         res =  second_response.choices[0].message.content
