@@ -109,7 +109,6 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
     from enum import Enum
     class Intent(Enum):
         guidance = "智能调用"
-        analyze = "跑量诊断"
         qa = "问题集问答"
         doc = "文档问答"
         cannot_resolve = "无法解决"
@@ -152,7 +151,7 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
 
         def get_intent(text):
             # 定义关键词列表
-            keywords = [ '智能调用', '跑量诊断', '问题集问答', '文档问答', '无法解决', '不清楚']
+            keywords = [ '智能调用',  '问题集问答', '文档问答', '无法解决', '不清楚']
 
             # 初始化计数器字典
             count_dict = {keyword: 0 for keyword in keywords}
@@ -175,8 +174,6 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
         
             if "智能调用" in intent:
                 return Intent.guidance
-            elif "跑量诊断" in intent:
-                return Intent.analyze
             elif "问题集问答" in intent:
                 return Intent.qa
             elif "文档问答" in intent:
@@ -291,84 +288,6 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
             yield json.dumps({"answer": response,
                             "docs": []},
                             ensure_ascii=False)
-    
-    # 跑量诊断
-    async def analyze_chat_iterator(query: str,
-                                history: Optional[List[History]],
-                                model_name: str = LLM_MODEL,
-                                ) -> AsyncIterable[str]:
-
-        model = ChatOpenAI(
-            streaming=True,
-            verbose=True,
-            openai_api_key=llm_model_dict[model_name]["api_key"],
-            openai_api_base=llm_model_dict[model_name]["api_base_url"],
-            model_name=model_name, # TODO(maoxianren)：
-            openai_proxy=llm_model_dict[model_name].get("openai_proxy"),
-            temperature = 0,
-            top_p = 0.5
-        )
-
-        # 获取设备id
-        id_list = extract_id(query)
-
-        # 分情况处理
-        response = ""
-        if len(id_list) > 1:
-            response += "您输入的id多于一个，现在分析第一个：{id_list[0]}。"
-            id_list = id_list[:1]
-        
-        device_info = ""
-        if len(id_list) > 0:
-            device_uuid = id_list[0]
-            # 若处理设备不存在，抛出异常
-            device_usage_info =  get_device_info(device_uuid)
-
-            change_point = get_change_point(device_uuid)
-
-            logging.info(change_point)
-            device_info = device_info_template.format(DeviceUsageInfo=device_usage_info,
-                                                      ChangePointInfo = change_point, )
-            logging.info(device_info)
-        prompt = analyze_prompt.format(user_input=query, device_info=device_info)
-
-        input_msg = History(role="user", content=prompt).to_msg_template()
-        chat_prompt = ChatPromptTemplate.from_messages(
-            [i.to_msg_template() for i in history] + [input_msg])
-        
-        prompt = chat_prompt.format()
-
-        response = model.invoke(prompt).content
-
-        model = ChatOpenAI(
-            streaming=True,
-            verbose=True,
-            openai_api_key=llm_model_dict[model_name]["api_key"],
-            openai_api_base=llm_model_dict[model_name]["api_base_url"],
-            model_name=model_name, # TODO(maoxianren)：
-            openai_proxy=llm_model_dict[model_name].get("openai_proxy"),
-            temperature = 0,
-            top_p = 0.5
-        )
-        response = model.invoke(f"根据分析过程给出结论：{response}。判断设备利用率低是否低，如果低给出原因。限制100字。").content
-
-        if "转人工" in response:
-            response = "转人工"
-
-        if device_info != "":
-            response = response + f"\n\n {device_info}"
-        if stream:
-            for token in response:
-            # Use server-sent-events to stream the response
-                a = {"answer": token,
-                                "docs": []}
-                yield json.dumps({"answer": token,
-                                "docs": []},
-                                ensure_ascii=False)
-        else:
-            yield json.dumps({"answer": response,
-                            "docs": []},
-                            ensure_ascii=False)
 
     # 不清楚
     async def inquiry_chat_iterator(query: str,
@@ -423,13 +342,9 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
                             "docs": []},
                             ensure_ascii=False)
 
-
-
+    # 意图分流
     if intent == Intent.guidance:
         return StreamingResponse(base_chat_iterator(query,  history, model_name),
-                             media_type="text/event-stream")
-    elif intent == Intent.analyze:
-        return StreamingResponse(analyze_chat_iterator(query, history, model_name),
                              media_type="text/event-stream")
     elif intent == Intent.qa:
         return StreamingResponse(knowledge_base_chat_iterator(query, docs, history, model_name),
@@ -443,6 +358,9 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
     elif intent == Intent.unclear:
         return StreamingResponse(inquiry_chat_iterator(query, history, model_name),
                         media_type="text/event-stream")
-    else:
+    elif intent == Intent.artificial:
         return StreamingResponse(chat_iterator(call_artificial),
                         media_type="text/event-stream")
+    else:
+        return StreamingResponse(inquiry_chat_iterator(query, history, model_name),
+                media_type="text/event-stream")

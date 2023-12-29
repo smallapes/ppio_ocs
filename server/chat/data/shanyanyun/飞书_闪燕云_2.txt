@@ -17,7 +17,7 @@
 可上机需求如下图  ​
 
 ![](https://internal-api-drive-
-stream.feishu.cn/space/api/box/stream/download/v2/cover/SUgXb2B14o2piLx4xgOc7cZSnwb/?fallback_source=1&height=1280&mount_node_token=UI3Rd19LNoJn6oxYGGocd8Ecnrc&mount_point=docx_image&policy=equal&width=1280)
+stream.feishu.cn/space/api/box/stream/download/v2/cover/Jnvhb5QWgoLvaqxTncTcOyy5nAc/?fallback_source=1&height=1280&mount_node_token=UsmodGEGXo1ZVVxmv57cil7HnSg&mount_point=docx_image&policy=equal&width=1280)
 
 二、新手上机指南  ​
 

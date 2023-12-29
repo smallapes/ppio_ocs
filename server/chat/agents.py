@@ -453,7 +453,7 @@ def analyze_usage(deviceUUID: str):
 
         if device_info != "":
             response = response + f"\n\n {device_info}"
-        res = f"{deviceUUID}: \n {response}"
+        res = f"{deviceUUID} \n {response}"
         return res
             
 # ---------------------- 函数调用 ----------------------

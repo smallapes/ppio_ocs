@@ -22,20 +22,20 @@ stream.feishu.cn/space/api/box/stream/download/preview/V5TLbyvKpoJ9CYxii7Gc2TFCn
 可上机需求如下图  ​
 
 ![](https://internal-api-drive-
-stream.feishu.cn/space/api/box/stream/download/v2/cover/QurAbZgYWowY48xVxVgct8DGn1d/?fallback_source=1&height=1280&mount_node_token=doxcnoNk9YZJqNhWvRactVSwIsc&mount_point=docx_image&policy=equal&width=1280)
+stream.feishu.cn/space/api/box/stream/download/v2/cover/V9glbPD5nocdFFxq1UychE8enRc/?fallback_source=1&height=1280&mount_node_token=doxcn7d4pPLlvGRUu2kaS8BrlQg&mount_point=docx_image&policy=equal&width=1280)
 
 3. 
 
 推荐业务高跑量图如下  ​
 
 ![](https://internal-api-drive-
-stream.feishu.cn/space/api/box/stream/download/v2/cover/NY8gbJbWvoWiUaxLosWc7CYVn6l/?fallback_source=1&height=1280&mount_node_token=doxcn7B4XXx0L0OTQRlF4OyZQdb&mount_point=docx_image&policy=equal&width=1280)
+stream.feishu.cn/space/api/box/stream/download/v2/cover/XsGfbvhO3oNK0axrKgfcNlQ8nic/?fallback_source=1&height=1280&mount_node_token=doxcnBh1pErakPWF0LvjoI59Hmb&mount_point=docx_image&policy=equal&width=1280)
 
 ![](https://internal-api-drive-
-stream.feishu.cn/space/api/box/stream/download/v2/cover/Vx1vbiQNOoZHeUxWy4bcPNSKnnc/?fallback_source=1&height=1280&mount_node_token=doxcnh24hoTcozGLnAsUifC63Fh&mount_point=docx_image&policy=equal&width=1280)
+stream.feishu.cn/space/api/box/stream/download/v2/cover/MedHbBcEQozRZAx5F6PcOaVTn1e/?fallback_source=1&height=1280&mount_node_token=doxcnlk4EHyKsIbE4PBUFm7PZ4e&mount_point=docx_image&policy=equal&width=1280)
 
 ![](https://internal-api-drive-
-stream.feishu.cn/space/api/box/stream/download/v2/cover/LV2nbgECVoxBu2xVIczcrcMdnhe/?fallback_source=1&height=1280&mount_node_token=doxcnkpvvMXSRgUFeQyYinkKRMh&mount_point=docx_image&policy=equal&width=1280)
+stream.feishu.cn/space/api/box/stream/download/v2/cover/RXOZbjcqJoQ3FaxFrHScfnN6njf/?fallback_source=1&height=1280&mount_node_token=doxcn81wALQwHrVPUyRUJSfiYjc&mount_point=docx_image&policy=equal&width=1280)
 
 ![](https://internal-api-drive-
 stream.feishu.cn/space/api/box/stream/download/v2/cover/QjVGbqfLXoajKMx77L4c1VM8nZc/?fallback_source=1&height=1280&mount_node_token=doxcnzcv3v026rERE2TtfSoEBBd&mount_point=docx_image&policy=equal&width=1280)
@@ -43,13 +43,19 @@ stream.feishu.cn/space/api/box/stream/download/v2/cover/QjVGbqfLXoajKMx77L4c1VM8
 ![](https://internal-api-drive-
 stream.feishu.cn/space/api/box/stream/download/v2/cover/J8lUbASwtoCUg2xjazecgBEMnLc/?fallback_source=1&height=1280&mount_node_token=doxcnp1DyKLFqQHYN33t9gqNhRc&mount_point=docx_image&policy=equal&width=1280)
 
+![](https://internal-api-drive-
+stream.feishu.cn/space/api/box/stream/download/v2/cover/BM8UbmtXHoeDzIxrTJvcferknNd/?fallback_source=1&height=1280&mount_node_token=doxcnR6AKvH8yL78UuGHkRI5JIh&mount_point=docx_image&policy=equal&width=1280)
+
 50%
 
 ![](https://internal-api-drive-
-stream.feishu.cn/space/api/box/stream/download/v2/cover/BG0tbJNUqo4ZtbxHQvGcsGPdnlf/?fallback_source=1&height=1280&mount_node_token=doxcnP33j96GOFEPNI8JTbweYOe&mount_point=docx_image&policy=equal&width=1280)
+stream.feishu.cn/space/api/box/stream/download/v2/cover/Sp1TbG4FKoejHox1ZN0cFtV2nUM/?fallback_source=1&height=1280&mount_node_token=doxcnKdbm9kzLFPeehutXfRNOWg&mount_point=docx_image&policy=equal&width=1280)
 
 ![](https://internal-api-drive-
-stream.feishu.cn/space/api/box/stream/download/v2/cover/FKqpbYA1tobCUhxZZYrcUcoSn5b/?fallback_source=1&height=1280&mount_node_token=doxcnRsxXK4wv5wARwdOR0UtTsh&mount_point=docx_image&policy=equal&width=1280)
+stream.feishu.cn/space/api/box/stream/download/v2/cover/E2PMbbuOmoaIkhxoOxEc1QOwnSg/?fallback_source=1&height=1280&mount_node_token=doxcnmHfL8UftK7iIA4ILOnx96d&mount_point=docx_image&policy=equal&width=1280)
+
+![](https://internal-api-drive-
+stream.feishu.cn/space/api/box/stream/download/v2/cover/NuTIb5ln5oh0h6xIPAOcXCGXn9e/?fallback_source=1&height=1280&mount_node_token=doxcn8cpR4a0RZpOY49AKCxg8Mg&mount_point=docx_image&policy=equal&width=1280)
 
 ![](https://internal-api-drive-
 stream.feishu.cn/space/api/box/stream/download/v2/cover/L1p0bvUqQoXuJyx8JGzcwpVunPv/?fallback_source=1&height=1280&mount_node_token=doxcnwb8K62bmDlTVtQySXpsCTe&mount_point=docx_image&policy=equal&width=1280)

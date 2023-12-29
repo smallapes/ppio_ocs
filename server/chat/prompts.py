@@ -100,7 +100,6 @@ function_call_prompt = """
 
 
 # 跑量诊断
-
 analyze_prompt = """
 你是一个边缘云设备利用率诊断的专家，按照下面的步骤诊断设备利用率。
 
