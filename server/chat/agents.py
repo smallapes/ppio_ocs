@@ -642,10 +642,11 @@ def run_conversation(query = "What's the pulation like in San Francisco, Tokyo, 
 
     # Step 1: send the conversation and available functions to the model
     messages = [{"role": "system", "content": f"可能需要多次调用函数，不要遗漏"}]
-    messages = [{"role": "user", "content": query}]
+    h = ''
     if len(history_1) > 0:
         h = history_1[-1]
         messages.append({'role': h.role, 'content': h.content})
+    messages.append({"role": "user", "content": f"用户输入：{query}，分析：{h}，根据分析调用工具并回答"})
     logging.info(f"{fprefix}: {messages}")
     response = client.chat.completions.create(
         model=model_name_1, # TODO (猫仙人)

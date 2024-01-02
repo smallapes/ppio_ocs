@@ -76,7 +76,7 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
                         ):
     platform1 = ''
     platform2 = ''
-    history = history[:6]
+    history = history[:4]
     if knowledge_base_name == PAINET_KB_NAME:
         kbn = PAINET_KB_NAME
         dkbn = PAINET_DOC_KB_NAME
@@ -211,6 +211,7 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
             # top_p = 0.5,
             # top_k = 3,
         )
+        history = history[:4]
 
         context = "\n".join([doc.page_content for doc in docs])
 
@@ -262,14 +263,7 @@ def knowledge_base_chat(query: str = Body(..., description="用户输入", examp
                                 model_name: str = LLM_MODEL,
                                 ) -> AsyncIterable[str]:
 
-        prompt = function_call_prompt.format(user_input=query)
-        input_msg = History(role="user", content=prompt).to_msg_template()
-        chat_prompt = ChatPromptTemplate.from_messages(
-            [i.to_msg_template() for i in history] + [input_msg])
-        
-        prompt = chat_prompt.format()
-
-        response = run_conversation(prompt, history, model_name,
+        response = run_conversation(query, history, model_name,
                                      device_info_template_1=device_info_template, 
                                     analyze_prompt_1=analyze_prompt)
 
